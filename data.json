@@ -554,6 +554,6 @@
         "Brutal": "Very Harsh"
     },
     "config": {
-        "libraries": "True"
+        "libraries": "False"
     }
 }
