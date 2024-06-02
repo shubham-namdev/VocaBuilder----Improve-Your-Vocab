@@ -26,18 +26,24 @@ class Data:
         
         return key
 
-    def get_words_char(self, char :chr) -> dict:
 
+    def get_words_char(self, char :chr) -> dict:
         with open(self.datafile, 'r') as f:
             self.data = json.load(f)
         
         words = {}
-
         for k, v in self.data['data'].items() :
             if k[0].lower() == char.lower():
                 words[k] = v
+
+        k = words.keys()
+        k = list(k)
+        random.shuffle(k)    
+        words = {x : self.data['data'][x] for x in k}
+        
         return words
     
+
     def get_words_num(self, cnt :int) -> dict:
 
         with open(self.datafile, 'r') as f:
@@ -53,7 +59,6 @@ class Data:
 
 
     def get_data(self, char :chr = None, cnt :int = 10) -> dict:
-        
         if char : 
             return self.get_words_char(char = char)
 
@@ -62,6 +67,7 @@ class Data:
 
         else:
             return dict()
+
 
     def add_data(self, word: str, meaning:str) -> None :
         with open(self.datafile, 'r') as f:
@@ -72,6 +78,7 @@ class Data:
         with open(self.datafile, 'w') as f:
             json.dump(json_data, f, indent=4)
 
+
     def get_config(self) -> dict:
         with open(self.datafile, 'r') as f:
             json_data = json.load(f)
@@ -79,6 +86,7 @@ class Data:
         config = json_data["config"]
 
         return config
+
 
     def change_config(self, conf : str, val : str) -> None:
         with open(self.datafile, 'r') as f:
@@ -95,11 +103,8 @@ class App:
     def __init__(self) -> None:
                    
         self.data_ins = Data()
-
         self.config = self.data_ins.get_config()
-
         self.run = True
-
 
         for k, v in self.config.items():
             if k.lower() == "libraries" and v.lower() == "false":
@@ -119,17 +124,14 @@ class App:
                     self.run = False
                     print(e)
 
-        if self.run:
-            print_message("Starting the app...", color='green')
-            time.sleep(1)
-        else :
+        if not self.run:
             print_message("Startup Failed!", color='red')
             exit()
             
-
         while self.run:
             self.data_ins = Data()
             self.home()
+
 
     def home(self) -> None:
         self.print_header("home")
@@ -298,10 +300,23 @@ class App:
             
             words = self.data_ins.get_data(char = char)
 
-        
-        self.test_page(words = words)
+        self.print_instructions()
 
+        self.test_page(words = words)
     
+
+    def print_instructions(self) -> None:
+        self.print_header("inst")  
+        print_message("Please read all the instructions carefully before proceeding!", color='red')
+        print("** Please use the Right Arrow key to move on to the next word.")
+        print("** If there is any word that you could not answer, press the Up Arrow key to mark it.")
+
+        print_message("Press Right Arrow Key to continue -->", color='magenta')
+        keyboard.wait("right")
+
+        keyboard.unhook_all()
+    
+
     def test_page(self, words :dict) -> None:
         
         unsolved = []
@@ -337,22 +352,21 @@ class App:
             print_message(f"{percent:.2F}%")
 
             print()
-            print()              
-            print_message("Unanswered Words : ", color='magenta')
+            print()   
+            if unsolved:  
+                print_message("Unanswered Words : ", color='magenta')
 
-            for w in unsolved:
-                print_message(f"{w} ", color='cyan', end="")
-                spaces = 15 - len(w)
-                print_message(" " * spaces + f" :  {words[w]}")
-
-            print()
-            print()    
+                for w in unsolved:
+                    print_message(f"{w} ", color='cyan', end="")
+                    spaces = 15 - len(w)
+                    print_message(" " * spaces + f" :  {words[w]}")
+                
+                print()
+                print()    
 
             print_message("Press ESC to exit --> ", color='magenta', end = "")
-
             keyboard.wait('esc')
                 
-        
         try : 
             for w in words.keys():
                 self.print_header("test_page")
@@ -367,7 +381,6 @@ class App:
                 keyboard.block_key('c')
                 talk(w)
                 keyboard.unblock_key('c')
-
 
                 keyboard.on_press_key('up', lambda event, val = w : markUnsolved(event, val))
                 keyboard.wait('right')
@@ -384,7 +397,6 @@ class App:
                 print_message("Ctrl + C    : Quit            ",color='magenta', centered=True)
                 
                 keyboard.wait('right')
-
                 keyboard.unhook_all()
 
                 c += 1
@@ -396,6 +408,7 @@ class App:
             time.sleep(1)
                 
         report()
+
 
     def print_header(self, loc : str, text : str = None) : 
         commands = {
@@ -415,4 +428,3 @@ class App:
 
 if __name__ == '__main__':
     app = App()
-
